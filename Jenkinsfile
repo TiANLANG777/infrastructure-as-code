@@ -1,6 +1,6 @@
 pipeline {
     // 任务 2: 指定在你的 lang-tian 节点运行
-    agent { label 'lang-tian' }
+    agent { label 'langtian' }
 
     environment {
         REGISTRY = "192.168.199.142:5000"
