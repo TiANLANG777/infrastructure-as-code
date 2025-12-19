@@ -1,0 +1,5 @@
+- name: Setup environment
+  hosts: all
+  tasks:
+    - name: Ensure docker is installed
+      apt: name=docker.io state=present
