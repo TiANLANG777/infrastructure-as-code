@@ -30,16 +30,13 @@ pipeline {
                         VM_IP=\$(terraform output -raw instance_ip)
                         echo "Target VM IP: \${VM_IP}"
                         
-                        # 增加 -w 5 等待 SSH 服务完全启动（防止刚创建完连不上）
-                        sleep 10 
-
+                        sleep 10
                         export ANSIBLE_HOST_KEY_CHECKING=False
                         
-                        # 修改点：增加 --private-key 参数
-                        # 请确保路径 /home/ubuntu/.ssh/id_rsa 是正确的
+                        # 修改点：使用我们刚创建的这把钥匙 lang-tian.pem
                         ansible-playbook -u ubuntu \\
                             -i "\${VM_IP}," \\
-                            --private-key /home/ubuntu/.ssh/id_rsa \\
+                            --private-key /home/ubuntu/.ssh/lang-tian.pem \\
                             ../playbook.yml
                     """
                 }
