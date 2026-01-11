@@ -44,9 +44,10 @@ resource "yandex_compute_instance" "vm-lab5" {
   }
 
   metadata = {
-    # 你的 SSH 公钥，用于自动化登录
-    ssh-keys = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDIOgHnFg2dD1A0GjruRV+kw/EYWh3soEtgFwELAKkKv8iHO6C98cakh6OLDkiLdWy7ZtpAqfE1Lue7cvQcLAwO/oCso8Ry3BqxgFqrfwRq9I3ZNvigjBY2+DsegtmOm6OkypM3bAis8CScsDZxLrzn/hMkCUKKIwbBEh9Q95cbfJcK5KLjMx6AddUwddrKbarbr/5VBeFP3wKAWgh70CZUjW16lcHzVy0x901TZXziii5umme3aiKMOLM2C+3ero4A6dldzEnV9RTNOzmcQncq51SmrFohQFYMme3OSeueNKrH4se8PL02cn3OomnAIL77obgSmmADUWAOUK2Pn7Yv
-"
+    # 注意：用户名 ubuntu 后面有一个冒号，然后紧跟公钥
+    ssh-keys = <<-EOF
+      ubuntu:ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDIOgHnFg2dD1A0GjruRV+kw/EYWh3soEtgFwELAKkKv8iHO6C98cakh6OLDkiLdWy7ZtpAqfE1Lue7cvQcLAwO/oCso8Ry3BqxgFqrfwRq9I3ZNvigjBY2+DsegtmOm6OkypM3bAis8CScsDZxLrzn/hMkCUKKIwbBEh9Q95cbfJcK5KLjMx6AddUwddrKbarbr/5VBeFP3wKAWgh70CZUjW16lcHzVy0x901TZXziii5umme3aiKMOLM2C+3ero4A6dldzEnV9RTNOzmcQncq51SmrFohQFYMme3OSeueNKrH4se8PL02cn3OomnAIL77obgSmmADUWAOUK2Pn7Yv
+    EOF
   }
 }
 
