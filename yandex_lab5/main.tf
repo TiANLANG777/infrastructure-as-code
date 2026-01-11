@@ -18,7 +18,7 @@ resource "yandex_vpc_subnet" "lab-subnet" {
 
 # 4. 创建虚拟机实例
 resource "yandex_compute_instance" "vm-lab5" {
-  name = "tianlang-yandex-vm"
+  name = "tianlang-yandex-vm-v3"
 
   resources {
     cores  = 2
