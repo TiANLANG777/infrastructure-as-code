@@ -1,5 +1,10 @@
 - name: Setup environment
   hosts: all
+  # 关键修改：添加下面这一行
+  become: yes
   tasks:
     - name: Ensure docker is installed
-      apt: name=docker.io state=present
+      apt:
+        name: docker.io
+        state: present
+        update_cache: yes
