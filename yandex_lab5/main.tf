@@ -18,8 +18,11 @@ resource "yandex_vpc_subnet" "lab-subnet" {
 
 # 4. 创建虚拟机实例
 resource "yandex_compute_instance" "vm-lab5" {
-  name        = "tianlang-yandex-vm-v5" # 再次改名以防万一
-  platform_id = "standard-v2"          # 强制物理机架构变更，这会强制触发重建
+  name        = "tianlang-vm-final" 
+  platform_id = "standard-v2"
+  
+  # 新增这一行，允许 Terraform 停止机器进行更新
+  allow_stopping_for_update = true
 
   resources {
     cores  = 2
@@ -28,10 +31,9 @@ resource "yandex_compute_instance" "vm-lab5" {
 
   boot_disk {
     initialize_params {
-      # 使用上面 data 模块动态获取的镜像 ID
       image_id = data.yandex_compute_image.ubuntu.id
-      type     = "network-hdd"
-      size     = 20
+      # 如果想强制重建，可以把 size 改一下，比如从 20 改成 21
+      size     = 21 
     }
   }
 
