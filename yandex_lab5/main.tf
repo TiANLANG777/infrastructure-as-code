@@ -18,7 +18,8 @@ resource "yandex_vpc_subnet" "lab-subnet" {
 
 # 4. 创建虚拟机实例
 resource "yandex_compute_instance" "vm-lab5" {
-  name = "tianlang-yandex-vm-v3"
+  name        = "tianlang-yandex-vm-v5" # 再次改名以防万一
+  platform_id = "standard-v2"          # 强制物理机架构变更，这会强制触发重建
 
   resources {
     cores  = 2
