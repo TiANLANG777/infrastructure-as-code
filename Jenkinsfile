@@ -22,16 +22,20 @@ pipeline {
         stage('Step 2: Infra Logic') {
             steps {
                 echo "Initializing and Applying Terraform for Yandex Cloud..."
-                // withCredentials 将授权 JSON 文件挂载到临时路径
                 withCredentials([file(credentialsId: "${YC_CREDENTIALS_ID}", variable: 'MY_KEY')]) {
                     sh """
-                        # 进入你新建的 yandex_lab5 文件夹
                         cd yandex_lab5
-                        
                         terraform init
-                        
-                        # 传入凭据路径，自动批准执行
                         terraform apply -var="yc_key_path=${MY_KEY}" -auto-approve
+                        
+                        # 获取新创建的虚拟机 IP
+                        VM_IP=$(terraform output -raw instance_ip)
+                        echo "Target VM IP: \${VM_IP}"
+
+                        # 关键：使用 Ansible 配置这台新机器
+                        # 第一次连接需要跳过 SSH 密钥检查
+                        export ANSIBLE_HOST_KEY_CHECKING=False
+                        ansible-playbook -u ubuntu -i "\${VM_IP}," ../playbook.yml
                     """
                 }
             }
