@@ -7,6 +7,7 @@ pipeline {
         IMAGE_NAME = "tianlang-app"
         // 对应 image_2306ed.png 中显示的 ID
         YC_CREDENTIALS_ID = "YC_KEY_FILE" 
+        TF_CLI_CONFIG_FILE = "/home/ubuntu/.terraform.d/filesystem_mirror.tfrc"
     }
 
     stages {
