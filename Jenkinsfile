@@ -30,13 +30,17 @@ pipeline {
                         VM_IP=\$(terraform output -raw instance_ip)
                         echo "Target VM IP: \${VM_IP}"
                         
-                        sleep 10
+                        # 核心修改：等待 30 秒，确保 SSHD 服务完全启动
+                        echo "Waiting for SSH to wake up..."
+                        sleep 30 
+
                         export ANSIBLE_HOST_KEY_CHECKING=False
                         
-                        # 修改点：使用我们刚创建的这把钥匙 lang-tian.pem
+                        # 使用 Ansible 的连接参数增加重试，防止网络抖动
                         ansible-playbook -u ubuntu \\
                             -i "\${VM_IP}," \\
                             --private-key /home/ubuntu/.ssh/lang-tian.pem \\
+                            --ssh-common-args='-o ConnectTimeout=10 -o ConnectionAttempts=5' \\
                             ../playbook.yml
                     """
                 }
