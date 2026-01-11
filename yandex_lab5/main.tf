@@ -44,7 +44,8 @@ resource "yandex_compute_instance" "vm-lab5" {
 
   metadata = {
     # 你的 SSH 公钥，用于自动化登录
-    ssh-keys = "ubuntu:ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC6jYQ9MkfYN5zM6xwXrfw9xBq/KlkBTqaJcXEa8TzRE0DuwNO7+2JONOLA8NWsuiF7VrYsiwqofMILr8s6Vd01gW+qvEiO96d/RCUB3LBy2n+52RmcE/Fm5VApRuFIeulP81aY/OZbHsIDO9EoX7mN/1APReNcXV0dESCaH4KC1Iur9nJwa9PYZv4HeIJq1vGAY5Z2lVMcyBf0Ego6YQrkmJsL4zfJ7Ynr9WUNwgWwR8Mum34xX4CBQi+Ej/NO5bKUVWC5F7LnjArET00WlfS8n1wfqoo2WXqybwU8car2eCccOPCU/PTs7f6KBMGX3XX2g47O0cq8QnE47kji061D ubuntu@lang-tian"
+    ssh-keys = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDIOgHnFg2dD1A0GjruRV+kw/EYWh3soEtgFwELAKkKv8iHO6C98cakh6OLDkiLdWy7ZtpAqfE1Lue7cvQcLAwO/oCso8Ry3BqxgFqrfwRq9I3ZNvigjBY2+DsegtmOm6OkypM3bAis8CScsDZxLrzn/hMkCUKKIwbBEh9Q95cbfJcK5KLjMx6AddUwddrKbarbr/5VBeFP3wKAWgh70CZUjW16lcHzVy0x901TZXziii5umme3aiKMOLM2C+3ero4A6dldzEnV9RTNOzmcQncq51SmrFohQFYMme3OSeueNKrH4se8PL02cn3OomnAIL77obgSmmADUWAOUK2Pn7Yv
+"
   }
 }
 
