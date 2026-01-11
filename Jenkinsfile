@@ -18,30 +18,29 @@ pipeline {
             }
         }
 
-        // 任务 5: IaC 基础设施逻辑 (适配 Yandex Cloud)
-        // 任务 5: IaC 基础设施逻辑 (适配 Yandex Cloud)
         stage('Step 2: Infra Logic') {
             steps {
                 echo "Initializing and Applying Terraform for Yandex Cloud..."
-                // 绑定 Yandex Cloud 密钥文件
                 withCredentials([file(credentialsId: "${YC_CREDENTIALS_ID}", variable: 'MY_KEY')]) {
                     sh """
                         cd yandex_lab5
-                        
-                        # 1. 初始化 Terraform
                         terraform init
-                        
-                        # 2. 执行部署 (使用 \$ 符号转义，确保 Shell 能读取到 MY_KEY)
                         terraform apply -var="yc_key_path=\$MY_KEY" -auto-approve
                         
-                        # 3. 提取新创建的虚拟机 IP
                         VM_IP=\$(terraform output -raw instance_ip)
                         echo "Target VM IP: \${VM_IP}"
                         
-                        # 4. (可选) 实验 5 要求：使用 Ansible 进行配置管理
-                        # 注意：如果暂不需要跑 Ansible，可以把下面两行先注释掉
+                        # 增加 -w 5 等待 SSH 服务完全启动（防止刚创建完连不上）
+                        sleep 10 
+
                         export ANSIBLE_HOST_KEY_CHECKING=False
-                        ansible-playbook -u ubuntu -i "\${VM_IP}," ../playbook.yml
+                        
+                        # 修改点：增加 --private-key 参数
+                        # 请确保路径 /home/ubuntu/.ssh/id_rsa 是正确的
+                        ansible-playbook -u ubuntu \\
+                            -i "\${VM_IP}," \\
+                            --private-key /home/ubuntu/.ssh/id_rsa \\
+                            ../playbook.yml
                     """
                 }
             }
