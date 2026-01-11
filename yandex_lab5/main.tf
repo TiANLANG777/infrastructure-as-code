@@ -33,7 +33,8 @@ resource "yandex_compute_instance" "vm-lab5" {
     initialize_params {
       image_id = data.yandex_compute_image.ubuntu.id
       # 如果想强制重建，可以把 size 改一下，比如从 20 改成 21
-      size     = 21 
+      size     = 25 
+      type     = "network-ssd"
     }
   }
 
