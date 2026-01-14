@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         ANSIBLE_HOST_KEY_CHECKING = "False"
-        SSH_KEY_PATH = "/home/ubuntu/id_rsa_elk_tf"
+        // 注意：这里删除了全局 SSH_KEY_PATH，因为我们会动态生成路径
     }
 
     stages {
@@ -25,7 +25,6 @@ pipeline {
         stage('Deploy to Yandex K8s') {
             steps {
                 dir('yandex_lab5') {
-                    // 这里使用的是 Yandex 的 JSON 密钥
                     withCredentials([file(credentialsId: 'YC_KEY_FILE', variable: 'MY_KEY')]) {
                         sh 'terraform init'
                         sh 'terraform apply -var=yc_key_path=$MY_KEY -auto-approve'
@@ -39,11 +38,17 @@ pipeline {
         stage('OpenStack: Provision VM') {
             steps {
                 dir('openstack') {
-                    // ⬇️⬇️⬇️ 重点修改：让代码读取你刚才上传的 OPENSTACK_RC 凭证 ⬇️⬇️⬇️
                     withCredentials([file(credentialsId: 'OPENSTACK_RC', variable: 'RC_FILE')]) {
                         sh '''
-                            # 加载凭证 (不再读取本地不存在的文件，而是读取 Jenkins 注入的变量)
                             . "$RC_FILE"
+                            
+                            # ⬇️⬇️⬇️ 新增：自动生成 SSH 密钥对 ⬇️⬇️⬇️
+                            # 如果密钥不存在，就现造一个
+                            if [ ! -f tianlang_key ]; then
+                                echo "Generating new SSH key pair..."
+                                ssh-keygen -t rsa -b 2048 -f tianlang_key -N ""
+                                chmod 600 tianlang_key
+                            fi
                             
                             terraform init
                             terraform apply -auto-approve
@@ -79,14 +84,16 @@ pipeline {
                 script {
                     def vmIp = sh(script: "cd openstack && terraform output -raw vm_ip", returnStdout: true).trim()
                     
-                    // 生成 Ansible 配置
+                    // ⬇️⬇️⬇️ 修改：获取刚才生成的私钥的绝对路径
+                    def keyPath = "${env.WORKSPACE}/openstack/tianlang_key"
+                    
                     sh """
                         mkdir -p ansible
                         echo "[openstack_vm]" > ansible/inventory.ini
-                        echo "${vmIp} ansible_user=ubuntu ansible_ssh_private_key_file=${SSH_KEY_PATH}" >> ansible/inventory.ini
+                        # 指向我们刚生成的 keyPath
+                        echo "${vmIp} ansible_user=ubuntu ansible_ssh_private_key_file=${keyPath}" >> ansible/inventory.ini
                     """
                     
-                    // 运行部署
                     sh 'ansible-playbook -i ansible/inventory.ini ansible/playbook.yml'
                 }
             }

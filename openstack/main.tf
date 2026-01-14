@@ -13,9 +13,8 @@ variable "network_name" { default = "students-net" } # 注意检查这里是不�
 variable "key_pair_name" { default = "tianlang-key" }
 
 resource "openstack_compute_keypair_v2" "keypair" {
-  name       = var.key_pair_name
-  # 注意：这里的公钥路径必须和 Jenkins 机器上的一致
-  public_key = file("/home/ubuntu/id_rsa_elk_tf.pub") 
+  name       = "tianlang-auto-key"       # 改个名字确保不冲突
+  public_key = file("tianlang_key.pub")  # ✅ 正确：读取当前目录下自动生成的公钥
 }
 
 resource "openstack_compute_instance_v2" "vm" {
