@@ -1,17 +1,13 @@
-fastapi==0.104.1
-uvicorn==0.24.0
-jinja2==3.1.2
-python-multipart
-python-json-logger
-# 数据科学与 AI
+# 核心库
+pyTelegramBotAPI
 pandas
-numpy
 scikit-learn
-joblib
-plotly
 requests
-# 数据库 (Base)
+
+# 数据库驱动 (为了之后连接 Postgres)
 psycopg2-binary
-sqlalchemy
-# 机器人 (Bot)
-python-telegram-bot==20.7
+
+# 如果你的 Dockerfile 里之前有 fastapi/uvicorn，保留它们防止构建报错，
+# 但我们的机器人主要靠上面的 pyTelegramBotAPI
+fastapi
+uvicorn
