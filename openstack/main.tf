@@ -6,27 +6,24 @@ terraform {
   }
 }
 
-# --- 1. 自动查找镜像 ---
+# --- 1. 自动查找镜像 (这个支持正则，保留) ---
 data "openstack_images_image_v2" "ubuntu" {
   name_regex  = "(?i)ubuntu" 
   most_recent = true
   visibility  = "public"
 }
 
-# --- 2. 自动查找网络 (关键修改) ---
+# --- 2. 查找网络 (这个不支持正则，必须精确匹配) ---
 data "openstack_networking_network_v2" "net" {
-  # 正则表达式：
-  # 1. (?i) 不区分大小写
-  # 2. 匹配 "student" (正确的) 或 "sutdent" (你系统里错的) 或 "net"
-  # 这样无论它怎么拼，只要带 "net" 或者那一串字符，都能被抓住！
-  name_regex = "(?i)(student|sutdent|net)"
+  # 直接使用你确认过的那个名字 (带拼写错误的那个)
+  name = "sutdents-net"
 }
 
 # --- 3. 变量定义 ---
 variable "flavor_name" { default = "m1.medium" }
 variable "key_pair_name" { default = "tianlang-auto-key" }
 
-# --- 4. 创建密钥对 ---
+# --- 4. 创建密钥对 (读取 Jenkins 现场生成的公钥) ---
 resource "openstack_compute_keypair_v2" "keypair" {
   name       = var.key_pair_name
   public_key = file("tianlang_key.pub") 
@@ -41,7 +38,7 @@ resource "openstack_compute_instance_v2" "vm" {
   security_groups = ["default"]
 
   network {
-    # 使用搜索到的 ID
+    # 使用找到的网络 UUID
     uuid = data.openstack_networking_network_v2.net.id
   }
 }
