@@ -14,10 +14,21 @@ spec:
     spec:
       containers:
       - name: tianlang-app
-        image: 192.168.199.142:5000/tianlang-app:52
+        # 确保使用最新构建的镜像，Jenkins会自动更新tag
+        image: 192.168.199.142:5000/tianlang-app:latest 
         imagePullPolicy: Always
+        # --- 关键修改：端口改为 8000 ---
         ports:
-        - containerPort: 80
+        - containerPort: 8000
+        # --- 亮点：注入 Kubernetes 环境变量 ---
+        env:
+          - name: ENV_TYPE
+            value: "Production"
+          # 利用 K8s Downward API 获取当前 Pod 的名字
+          - name: K8S_POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
 ---
 apiVersion: v1
 kind: Service
@@ -28,6 +39,7 @@ spec:
   selector:
     app: tianlang-web
   ports:
+    # --- 关键修改：TargetPort 改为 8000 ---
   - port: 80
-    targetPort: 80
+    targetPort: 8000
     nodePort: 30088
