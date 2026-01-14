@@ -3,132 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DevOps Master Console</title>
+    <title>DevOps AI Weather Station</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        :root { --primary: #00f2ea; --bg: #0d1117; --card: #161b22; --text: #c9d1d9; --danger: #ff5252; --success: #238636; }
-        body { margin: 0; font-family: 'Segoe UI', monospace; background-color: var(--bg); color: var(--text); display: flex; justify-content: center; min-height: 100vh; }
-        .dashboard { width: 90%; max-width: 1000px; margin-top: 50px; }
+        body { font-family: 'Segoe UI', monospace; background-color: #0d1117; color: #c9d1d9; margin: 0; padding: 20px; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 900px; }
         
-        /* 头部 */
-        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #30363d; padding-bottom: 20px; margin-bottom: 30px; }
-        .header h1 { margin: 0; font-size: 24px; color: var(--primary); text-shadow: 0 0 10px rgba(0, 242, 234, 0.5); }
-        .badge { padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; background: #30363d; color: white; }
-        .badge-prod { background: var(--success); }
-        .badge-dev { background: #f39c12; color: black; }
-
-        /* 卡片网格 */
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
-        .card { background: var(--card); border: 1px solid #30363d; border-radius: 6px; padding: 20px; position: relative; overflow: hidden; }
-        .card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: var(--primary); }
-        .card h3 { margin-top: 0; color: #8b949e; font-size: 14px; display: flex; align-items: center; gap: 10px; }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #30363d; padding-bottom: 15px; margin-bottom: 20px; }
+        .header h1 { color: #00f2ea; margin: 0; text-shadow: 0 0 10px rgba(0, 242, 234, 0.3); }
         
-        /* 动态数据样式 */
-        .data-value { font-size: 24px; font-weight: bold; color: #fff; margin: 10px 0; word-break: break-all; }
-        .data-label { font-size: 12px; color: #8b949e; }
-        .pod-id { color: var(--primary); font-family: 'Courier New', monospace; }
-
-        /* 终端窗口 */
-        .terminal { background: #000; padding: 15px; border-radius: 6px; font-family: 'Consolas', monospace; height: 200px; overflow-y: auto; color: #0f0; font-size: 12px; margin-top: 20px; border: 1px solid #333; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
-        .terminal p { margin: 5px 0; line-height: 1.4; }
-        .cursor { display: inline-block; width: 8px; height: 15px; background: #0f0; animation: blink 1s infinite; }
-
-        /* 交互按钮 */
-        .btn-group { display: flex; gap: 10px; margin-top: 15px; }
-        .action-btn { flex: 1; background: #21262d; border: 1px solid #30363d; color: var(--primary); padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.3s; }
-        .action-btn:hover { background: var(--primary); color: #000; box-shadow: 0 0 15px var(--primary); }
-        .btn-danger { color: var(--danger); border-color: var(--danger); }
-        .btn-danger:hover { background: var(--danger); color: white; box-shadow: 0 0 15px var(--danger); }
-
-        @keyframes blink { 50% { opacity: 0; } }
+        .grid { display: grid; grid-template-columns: 1fr 2fr; gap: 20px; }
+        .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        
+        .metric-value { font-size: 36px; font-weight: bold; color: white; margin: 10px 0; }
+        .metric-label { font-size: 12px; color: #8b949e; }
+        .pod-badge { background: #238636; color: white; padding: 2px 8px; border-radius: 10px; font-size: 10px; }
+        
+        /* 这里的 CSS 用于容纳 Plotly 图表 */
+        .chart-container { width: 100%; min-height: 300px; }
     </style>
 </head>
 <body>
 
-<div class="dashboard">
+<div class="container">
     <div class="header">
-        <div>
-            <h1><i class="fas fa-network-wired"></i> TIANLANG OPS CENTER</h1>
-            <div style="font-size: 12px; color: #8b949e; margin-top: 5px;">Powered by Python FastAPI & Kubernetes</div>
-        </div>
-        <div>
-            {% if env_type == 'Production' %}
-                <span class="badge badge-prod"><i class="fas fa-shield-alt"></i> PRODUCTION</span>
-            {% else %}
-                <span class="badge badge-dev">DEVELOPMENT</span>
-            {% endif %}
+        <h1><i class="fas fa-satellite-dish"></i> TIANLANG AI OPS</h1>
+        <div style="text-align: right;">
+            <div style="font-size: 12px;">Server Time: {{ server_time }}</div>
+            <div class="pod-badge">POD: {{ pod_name }}</div>
         </div>
     </div>
 
     <div class="grid">
         <div class="card">
-            <h3><i class="fas fa-cube"></i> Current Pod Instance</h3>
-            <div class="data-value pod-id">{{ pod_name }}</div>
-            <div class="data-label">Real-time K8s Downward API Data</div>
+            <h3><i class="fas fa-temperature-high"></i> Real-time</h3>
+            <div class="metric-value">{{ current_temp }}°C</div>
+            <div class="metric-label">{{ weather_desc }}</div>
+            <hr style="border-color: #30363d; margin: 20px 0;">
+            <h3><i class="fas fa-user-astronaut"></i> Operator</h3>
+            <div style="font-size: 18px; color: #00f2ea;">{{ student_name }}</div>
         </div>
 
         <div class="card">
-            <h3><i class="fas fa-clock"></i> Server Time (UTC)</h3>
-            <div class="data-value" id="server-time">{{ server_time }}</div>
-            <div class="data-label">Backend Synced Timestamp</div>
-        </div>
-
-        <div class="card">
-            <h3><i class="fas fa-bolt"></i> System Actions</h3>
-            <div class="btn-group">
-                <button class="action-btn" onclick="refreshData()"><i class="fas fa-sync"></i> REFRESH DATA</button>
-                <button class="action-btn btn-danger" onclick="simulateCrash()"><i class="fas fa-bug"></i> SIMULATE ERROR</button>
+            <h3><i class="fas fa-chart-line"></i> AI Prediction Model (RandomForest)</h3>
+            <div class="chart-container">
+                {{ plot_div | safe }}
+            </div>
+            <div class="metric-label" style="text-align: center; margin-top: 10px;">
+                Powered by Scikit-Learn & Plotly
             </div>
         </div>
     </div>
-
-    <div class="terminal" id="console">
-        <p>[SYSTEM] Initializing connection to {{ pod_name }}...</p>
-        <p>[SYSTEM] Backend: Python 3.9 | Framework: FastAPI</p>
-        <p>[INFO] Log aggregation enabled (JSON format).</p>
-        <p>[INFO] Waiting for user interaction...</p>
-        <span class="cursor"></span>
-    </div>
 </div>
-
-<script>
-    // 1. 终端打字机效果函数
-    function log(text, type="INFO") {
-        const term = document.getElementById('console');
-        const p = document.createElement('p');
-        const timestamp = new Date().toISOString().split('T')[1].split('.')[0];
-        
-        if (type === "ERROR") {
-            p.style.color = "#ff5252";
-            p.innerText = `[${timestamp}] [ERROR] ${text}`;
-        } else {
-            p.innerText = `[${timestamp}] [${type}] ${text}`;
-        }
-        
-        term.insertBefore(p, term.lastElementChild);
-        term.scrollTop = term.scrollHeight;
-    }
-
-    // 2. 刷新按钮：真的去重新加载页面，证明是动态的
-    function refreshData() {
-        log("Requesting latest data from Kubernetes API...", "SYSTEM");
-        setTimeout(() => {
-            window.location.reload();
-        }, 800);
-    }
-
-    // 3. 模拟崩溃按钮：纯前端特效，展示给老师看
-    function simulateCrash() {
-        log("Injecting fault into main process...", "WARN");
-        setTimeout(() => log("Connection lost: 503 Service Unavailable", "ERROR"), 500);
-        setTimeout(() => log("Kubernetes Liveness Probe failed!", "ERROR"), 1000);
-        setTimeout(() => log("Restarting Pod container...", "SYSTEM"), 2000);
-        setTimeout(() => {
-            log("System recovered.", "SUCCESS");
-            alert("Self-healing completed! (Simulation)");
-        }, 3000);
-    }
-</script>
 
 </body>
 </html>
