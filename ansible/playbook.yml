@@ -3,21 +3,23 @@
   hosts: all
   become: yes
   tasks:
-    - name: Install Docker dependencies
+    - name: Update apt cache
       apt:
-        name: [apt-transport-https, ca-certificates, curl, software-properties-common, python3-pip]
-        state: present
         update_cache: yes
 
-    - name: Install Docker
-      shell: curl -fsSL https://get.docker.com | sh
-      args:
-        creates: /usr/bin/docker
-
-    - name: Install Docker Compose
+    # ⬇️⬇️⬇️ 修改点：使用 apt 安装，稳如老狗 ⬇️⬇️⬇️
+    - name: Install Docker and Compose (Stable)
       apt:
-        name: docker-compose
+        name: 
+          - docker.io
+          - docker-compose
         state: present
+
+    - name: Start and enable Docker service
+      service:
+        name: docker
+        state: started
+        enabled: yes
 
     - name: Create app directory
       file:
@@ -40,6 +42,13 @@
       copy:
         src: ../templates
         dest: /opt/tianlang-app/
+
+    # 先尝试停止旧容器（如果有的话），防止端口冲突
+    - name: Stop existing containers
+      shell: docker-compose down
+      args:
+        chdir: /opt/tianlang-app
+      ignore_errors: yes
 
     - name: Start Application (Docker Compose)
       shell: docker-compose up -d --build
