@@ -2,16 +2,16 @@ fastapi==0.104.1
 uvicorn==0.24.0
 jinja2==3.1.2
 python-multipart
-# 数据科学库 (保留模型功能)
+python-json-logger
+# 数据科学与 AI
 pandas
 numpy
 scikit-learn
 joblib
-# 数据库 (新功能)
+plotly
+requests
+# 数据库 (Base)
 psycopg2-binary
 sqlalchemy
-# Telegram Bot (新功能)
+# 机器人 (Bot)
 python-telegram-bot==20.7
-requests
-# 绘图
-plotly
