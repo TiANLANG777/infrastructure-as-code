@@ -99,5 +99,28 @@ pipeline {
                 }
             }
         }
-    }
-}
+    stage('Debug: Check Bot Health') {
+            steps {
+                script {
+                    dir('openstack') {
+                        // 1. 获取虚拟机 IP
+                        def vmIp = sh(script: "terraform output -raw vm_ip", returnStdout: true).trim()
+                        echo "🔍 正在诊断虚拟机: ${vmIp}"
+
+                        withCredentials([file(credentialsId: 'OPENSTACK_RC', variable: 'RC_FILE')]) {
+                             // 使用刚才生成的私钥远程执行命令
+                             // 注意：StrictHostKeyChecking=no 是为了防止第一次连接询问 yes/no 卡住
+                            sh """
+                                echo "1️⃣ --- 测试网络连通性 (能连上 Telegram 吗?) ---"
+                                ssh -o StrictHostKeyChecking=no -i tianlang_key ubuntu@${vmIp} 'curl -I -m 5 https://api.telegram.org/bot${env.TELEGRAM_TOKEN}/getMe || echo "❌ 连不上 Telegram API"'
+                                
+                                echo "\n2️⃣ --- 抓取机器人报错日志 ---"
+                                ssh -o StrictHostKeyChecking=no -i tianlang_key ubuntu@${vmIp} 'sudo docker logs --tail 50 tianlang-app_app_1'
+                            """
+                        }
+                    }
+                }
+            }
+        }
+    } // stages 结束
+} // pipeline 结束
