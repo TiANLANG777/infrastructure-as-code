@@ -1,20 +1,21 @@
-version: '3.3'
+version: '2.1'  # <--- 改成 2.1，这是最老最稳的版本
 
 services:
-  # 1. 你的应用服务 (Bot + Web + Model)
   app:
-    # 这里的 image 会被 Jenkins 替换，但在本地我们可以先写死
-    image: tianlang-app:latest 
+    # ⬇️ 重点：不再使用 build: . 而是直接拉取 Jenkins 刚才做好的镜像
+    # 这样速度极快，也不用在虚拟机里编译 Pandas 了
+    image: 192.168.199.142:5000/tianlang-app:latest
     restart: always
     ports:
-      - "80:8000"  # OpenStack 虚拟机开放 80 端口访问网页
+      - "80:8000"
     environment:
+      # 记得把 Token 填进去
       - TELEGRAM_TOKEN=8279271928:AAH3AxAXw6LLdweqgbAOmui9kyaZlr30wn0
       - DATABASE_URL=postgresql://tianlang:securepass@db:5432/weatherdb
     depends_on:
-      - db
+      db:
+        condition: service_started
 
-  # 2. 数据库服务 (Base)
   db:
     image: postgres:13
     restart: always

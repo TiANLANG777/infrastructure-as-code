@@ -7,19 +7,25 @@
       apt:
         update_cache: yes
 
-    # ⬇️⬇️⬇️ 修改点：使用 apt 安装，稳如老狗 ⬇️⬇️⬇️
-    - name: Install Docker and Compose (Stable)
+    - name: Install Docker and Compose
       apt:
         name: 
           - docker.io
           - docker-compose
         state: present
 
-    - name: Start and enable Docker service
+    - name: Start Docker service
       service:
         name: docker
         state: started
         enabled: yes
+
+    # 这一步是为了允许从私有仓库拉取 HTTP 镜像 (防止 HTTPS 报错)
+    - name: Configure Docker Insecure Registry
+      shell: |
+        echo '{"insecure-registries":["192.168.199.142:5000"]}' > /etc/docker/daemon.json
+        systemctl restart docker
+      ignore_errors: yes
 
     - name: Create app directory
       file:
@@ -32,25 +38,21 @@
         src: "{{ item }}"
         dest: /opt/tianlang-app/
       with_items:
-        - ../app.py
-        - ../Dockerfile
-        - ../requirements.txt
-        - ../weather.csv
         - ../docker-compose.yml
-    
-    - name: Copy templates directory
-      copy:
-        src: ../templates
-        dest: /opt/tianlang-app/
+        # 其他文件其实不需要了，因为都在镜像里，但留着也没事
 
-    # 先尝试停止旧容器（如果有的话），防止端口冲突
     - name: Stop existing containers
       shell: docker-compose down
       args:
         chdir: /opt/tianlang-app
       ignore_errors: yes
 
-    - name: Start Application (Docker Compose)
-      shell: docker-compose up -d --build
+    - name: Pull latest image
+      shell: docker-compose pull
+      args:
+        chdir: /opt/tianlang-app
+
+    - name: Start Application
+      shell: docker-compose up -d
       args:
         chdir: /opt/tianlang-app
