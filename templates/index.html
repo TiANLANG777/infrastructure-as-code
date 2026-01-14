@@ -1,42 +1,134 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DevOps Backend Monitor</title>
+    <title>DevOps Master Console</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f2027; background: linear-gradient(to right, #2c5364, #203a43, #0f2027); color: #fff; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .card { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border-radius: 15px; padding: 40px; box-shadow: 0 15px 25px rgba(0,0,0,0.2); text-align: center; border: 1px solid rgba(255, 255, 255, 0.1); max-width: 500px; width: 90%; }
-        h1 { font-size: 2.2em; margin-bottom: 20px; color: #00f2ea; }
-        .info-item { margin: 15px 0; font-size: 1.1em; text-align: left; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 8px; }
-        .info-item i { color: #00f2ea; margin-right: 10px; width: 25px; }
-        .dynamic-data { font-weight: bold; color: #ffeb3b; }
-        .badge { display: inline-block; padding: 5px 10px; border-radius: 20px; font-size: 0.8em; margin-top: 20px; }
-        .badge-prod { background: #2ecc71; color: black; }
+        :root { --primary: #00f2ea; --bg: #0d1117; --card: #161b22; --text: #c9d1d9; --danger: #ff5252; --success: #238636; }
+        body { margin: 0; font-family: 'Segoe UI', monospace; background-color: var(--bg); color: var(--text); display: flex; justify-content: center; min-height: 100vh; }
+        .dashboard { width: 90%; max-width: 1000px; margin-top: 50px; }
+        
+        /* 头部 */
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #30363d; padding-bottom: 20px; margin-bottom: 30px; }
+        .header h1 { margin: 0; font-size: 24px; color: var(--primary); text-shadow: 0 0 10px rgba(0, 242, 234, 0.5); }
+        .badge { padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; background: #30363d; color: white; }
+        .badge-prod { background: var(--success); }
         .badge-dev { background: #f39c12; color: black; }
+
+        /* 卡片网格 */
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+        .card { background: var(--card); border: 1px solid #30363d; border-radius: 6px; padding: 20px; position: relative; overflow: hidden; }
+        .card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: var(--primary); }
+        .card h3 { margin-top: 0; color: #8b949e; font-size: 14px; display: flex; align-items: center; gap: 10px; }
+        
+        /* 动态数据样式 */
+        .data-value { font-size: 24px; font-weight: bold; color: #fff; margin: 10px 0; word-break: break-all; }
+        .data-label { font-size: 12px; color: #8b949e; }
+        .pod-id { color: var(--primary); font-family: 'Courier New', monospace; }
+
+        /* 终端窗口 */
+        .terminal { background: #000; padding: 15px; border-radius: 6px; font-family: 'Consolas', monospace; height: 200px; overflow-y: auto; color: #0f0; font-size: 12px; margin-top: 20px; border: 1px solid #333; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+        .terminal p { margin: 5px 0; line-height: 1.4; }
+        .cursor { display: inline-block; width: 8px; height: 15px; background: #0f0; animation: blink 1s infinite; }
+
+        /* 交互按钮 */
+        .btn-group { display: flex; gap: 10px; margin-top: 15px; }
+        .action-btn { flex: 1; background: #21262d; border: 1px solid #30363d; color: var(--primary); padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .action-btn:hover { background: var(--primary); color: #000; box-shadow: 0 0 15px var(--primary); }
+        .btn-danger { color: var(--danger); border-color: var(--danger); }
+        .btn-danger:hover { background: var(--danger); color: white; box-shadow: 0 0 15px var(--danger); }
+
+        @keyframes blink { 50% { opacity: 0; } }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h1><i class="fas fa-cube"></i> Kubernetes Monitor</h1>
-        <div class="info-item">
-            <i class="fas fa-user-graduate"></i> 学生: <span class="dynamic-data">{{ student_name }}</span>
+
+<div class="dashboard">
+    <div class="header">
+        <div>
+            <h1><i class="fas fa-network-wired"></i> TIANLANG OPS CENTER</h1>
+            <div style="font-size: 12px; color: #8b949e; margin-top: 5px;">Powered by Python FastAPI & Kubernetes</div>
         </div>
-        <div class="info-item">
-            <i class="fas fa-server"></i> Pod 名称: <span class="dynamic-data">{{ pod_name }}</span>
-        </div>
-        <div class="info-item">
-            <i class="far fa-clock"></i> 服务器时间: <span class="dynamic-data">{{ server_time }}</span>
-        </div>
-        
         <div>
             {% if env_type == 'Production' %}
-                <span class="badge badge-prod">Production Environment</span>
+                <span class="badge badge-prod"><i class="fas fa-shield-alt"></i> PRODUCTION</span>
             {% else %}
-                <span class="badge badge-dev">{{ env_type }} Environment</span>
+                <span class="badge badge-dev">DEVELOPMENT</span>
             {% endif %}
         </div>
     </div>
+
+    <div class="grid">
+        <div class="card">
+            <h3><i class="fas fa-cube"></i> Current Pod Instance</h3>
+            <div class="data-value pod-id">{{ pod_name }}</div>
+            <div class="data-label">Real-time K8s Downward API Data</div>
+        </div>
+
+        <div class="card">
+            <h3><i class="fas fa-clock"></i> Server Time (UTC)</h3>
+            <div class="data-value" id="server-time">{{ server_time }}</div>
+            <div class="data-label">Backend Synced Timestamp</div>
+        </div>
+
+        <div class="card">
+            <h3><i class="fas fa-bolt"></i> System Actions</h3>
+            <div class="btn-group">
+                <button class="action-btn" onclick="refreshData()"><i class="fas fa-sync"></i> REFRESH DATA</button>
+                <button class="action-btn btn-danger" onclick="simulateCrash()"><i class="fas fa-bug"></i> SIMULATE ERROR</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="terminal" id="console">
+        <p>[SYSTEM] Initializing connection to {{ pod_name }}...</p>
+        <p>[SYSTEM] Backend: Python 3.9 | Framework: FastAPI</p>
+        <p>[INFO] Log aggregation enabled (JSON format).</p>
+        <p>[INFO] Waiting for user interaction...</p>
+        <span class="cursor"></span>
+    </div>
+</div>
+
+<script>
+    // 1. 终端打字机效果函数
+    function log(text, type="INFO") {
+        const term = document.getElementById('console');
+        const p = document.createElement('p');
+        const timestamp = new Date().toISOString().split('T')[1].split('.')[0];
+        
+        if (type === "ERROR") {
+            p.style.color = "#ff5252";
+            p.innerText = `[${timestamp}] [ERROR] ${text}`;
+        } else {
+            p.innerText = `[${timestamp}] [${type}] ${text}`;
+        }
+        
+        term.insertBefore(p, term.lastElementChild);
+        term.scrollTop = term.scrollHeight;
+    }
+
+    // 2. 刷新按钮：真的去重新加载页面，证明是动态的
+    function refreshData() {
+        log("Requesting latest data from Kubernetes API...", "SYSTEM");
+        setTimeout(() => {
+            window.location.reload();
+        }, 800);
+    }
+
+    // 3. 模拟崩溃按钮：纯前端特效，展示给老师看
+    function simulateCrash() {
+        log("Injecting fault into main process...", "WARN");
+        setTimeout(() => log("Connection lost: 503 Service Unavailable", "ERROR"), 500);
+        setTimeout(() => log("Kubernetes Liveness Probe failed!", "ERROR"), 1000);
+        setTimeout(() => log("Restarting Pod container...", "SYSTEM"), 2000);
+        setTimeout(() => {
+            log("System recovered.", "SUCCESS");
+            alert("Self-healing completed! (Simulation)");
+        }, 3000);
+    }
+</script>
+
 </body>
 </html>
