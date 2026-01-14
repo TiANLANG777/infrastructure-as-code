@@ -4,7 +4,6 @@ metadata:
   name: tianlang-app
 spec:
   replicas: 1
-  # 必须确保留久化标签一致，建议使用 tianlang-web
   selector:
     matchLabels:
       app: tianlang-web
@@ -15,12 +14,11 @@ spec:
     spec:
       containers:
       - name: tianlang-app
-        # 建议使用 latest 确保拉取你刚推上去的 Nginx 镜像
         image: 192.168.199.142:5000/tianlang-app:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 80
-        # --- 注意：删除了之前的 command 和 args，因为 Nginx 镜像会自动启动 ---
+        # ！！！重要：这里绝对不能有 command 或 args ！！！
 ---
 apiVersion: v1
 kind: Service
@@ -33,5 +31,4 @@ spec:
   ports:
   - port: 80
     targetPort: 80
-    # 老师要求的 NodePort 30088
     nodePort: 30088
