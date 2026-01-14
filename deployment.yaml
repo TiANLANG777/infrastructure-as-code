@@ -15,7 +15,7 @@ spec:
       containers:
       - name: tianlang-app
         # ⬇️⬇️⬇️ 关键点：强制使用 54 号镜像 (Python版)
-        image: 192.168.199.142:5000/tianlang-app:56
+        image: 192.168.199.142:5000/tianlang-app:57
         imagePullPolicy: Always
         # ⬇️⬇️⬇️ 关键点：端口改为 8000
         ports:
