@@ -1,16 +1,15 @@
-version: '2.1'  # <--- 改成 2.1，这是最老最稳的版本
+version: '2.1'
 
 services:
   app:
-    # ⬇️ 重点：不再使用 build: . 而是直接拉取 Jenkins 刚才做好的镜像
-    # 这样速度极快，也不用在虚拟机里编译 Pandas 了
     image: 192.168.199.142:5000/tianlang-app:latest
     restart: always
     ports:
       - "80:8000"
     environment:
-      # 记得把 Token 填进去
       - TELEGRAM_TOKEN=8279271928:AAH3AxAXw6LLdweqgbAOmui9kyaZlr30wn0
+      # ✅ 已经填好你的真实 Key
+      - OPENWEATHER_API_KEY=6f1a57419ebc149fac088d8cdc402072
       - DATABASE_URL=postgresql://tianlang:securepass@db:5432/weatherdb
     depends_on:
       db:
