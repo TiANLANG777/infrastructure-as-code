@@ -1,64 +1,99 @@
 pipeline {
-    // 任务 2: 指定在你的 langtian-updated 节点运行
-    agent { label 'langtian' }
+    agent { label 'langtian' } # 确保这里和你之前的 Label 一致，通常是 l1 或 build-node
 
     environment {
-        REGISTRY = "192.168.199.142:5000"
-        IMAGE_NAME = "tianlang-app"
-        // 对应 image_2306ed.png 中显示的 ID
-        YC_CREDENTIALS_ID = "YC_KEY_FILE" 
-        TF_CLI_CONFIG_FILE = "/home/ubuntu/.terraform.d/filesystem_mirror.tfrc"
+        ANSIBLE_HOST_KEY_CHECKING = "False"
+        SSH_KEY_PATH = "/home/ubuntu/id_rsa_elk_tf" # 参考同学的路径 [cite: 1]
     }
 
     stages {
-        // 任务 3: 自动拉取代码
-        stage('Step 1: Checkout Git') {
+        stage('Checkout') {
             steps {
                 checkout scm
             }
         }
 
-        stage('Step 2: Infra Logic') {
+        // --- 任务 2: 部署到 Yandex K8s ---
+        stage('Build & Push Image (For K8s)') {
             steps {
-                echo "Initializing and Applying Terraform for Yandex Cloud..."
-                withCredentials([file(credentialsId: "${YC_CREDENTIALS_ID}", variable: 'MY_KEY')]) {
-                    sh """
-                        cd yandex_lab5
-                        terraform init
-                        terraform apply -var="yc_key_path=\$MY_KEY" -auto-approve
-                        
-                        VM_IP=\$(terraform output -raw instance_ip)
-                        echo "Target VM IP: \${VM_IP}"
-                        
-                        # 核心修改：等待 30 秒，确保 SSHD 服务完全启动
-                        echo "Waiting for SSH to wake up..."
-                        sleep 30 
+                script {
+                    // 构建镜像用于 K8s
+                    sh 'docker build -t 192.168.199.142:5000/tianlang-app:latest .'
+                    sh 'docker push 192.168.199.142:5000/tianlang-app:latest'
+                }
+            }
+        }
 
-                        export ANSIBLE_HOST_KEY_CHECKING=False
+        stage('Deploy to Yandex K8s') {
+            steps {
+                // 这里复用你原来的 Yandex Terraform 逻辑，假设在 yandex_lab5 文件夹
+                dir('yandex_lab5') {
+                    withCredentials([file(credentialsId: 'tianlang', variable: 'MY_KEY')]) {
+                        sh 'terraform init'
+                        sh 'terraform apply -var=yc_key_path=$MY_KEY -auto-approve'
+                    }
+                }
+                // 更新 K8s
+                sh 'kubectl apply -f deployment.yaml'
+                // 强制重启 Pod 以拉取最新镜像
+                sh 'kubectl rollout restart deployment/tianlang-app'
+            }
+        }
+
+        // --- 任务 1: 部署到 OpenStack ---
+        stage('OpenStack: Provision VM') {
+            steps {
+                dir('openstack') {
+                    sh '''
+                        # 使用同学的脚本加载凭证 [cite: 7]
+                        . /home/ubuntu/openrc-jenkins.sh
                         
-                        # 使用 Ansible 的连接参数增加重试，防止网络抖动
-                        ansible-playbook -u ubuntu \\
-                            -i "\${VM_IP}," \\
-                            --private-key /home/ubuntu/.ssh/lang-tian.pem \\
-                            --ssh-common-args='-o ConnectTimeout=10 -o ConnectionAttempts=5' \\
-                            ../playbook.yml
+                        # 清理旧环境 (如果有)
+                        terraform init
+                        terraform apply -auto-approve
+                    '''
+                }
+            }
+        }
+
+        stage('OpenStack: Wait for SSH') {
+            steps {
+                script {
+                    // 获取 OpenStack VM 的 IP [cite: 12]
+                    def vmIp = sh(script: "cd openstack && terraform output -raw vm_ip", returnStdout: true).trim()
+                    echo "OpenStack VM IP: ${vmIp}"
+                    
+                    // 等待 SSH 启动 [cite: 13, 14, 15]
+                    sh """
+                        for i in \$(seq 1 30); do
+                            if nc -z -w 5 ${vmIp} 22; then
+                                echo "SSH is UP!"
+                                exit 0
+                            fi
+                            echo "Waiting for SSH..."
+                            sleep 10
+                        done
+                        exit 1
                     """
                 }
             }
         }
-        // 任务 4 & 6: 构建并推送镜像
-        stage('Step 3: Build & Push Image') {
-            steps {
-                sh "/usr/bin/docker build -t ${REGISTRY}/${IMAGE_NAME}:${BUILD_NUMBER} ."
-                sh "/usr/bin/docker push ${REGISTRY}/${IMAGE_NAME}:${BUILD_NUMBER}"
-            }
-        }
 
-        // 任务 7: 交付到 Kubernetes
-        stage('Step 4: Deploy to K8s') {
+        stage('OpenStack: Deploy App (Ansible)') {
             steps {
-                sh "kubectl apply -f deployment.yaml"
-                sh "kubectl get pods"
+                script {
+                    def vmIp = sh(script: "cd openstack && terraform output -raw vm_ip", returnStdout: true).trim()
+                    
+                    // 生成 Ansible Inventory [cite: 23]
+                    sh """
+                        mkdir -p ansible
+                        echo "[openstack_vm]" > ansible/inventory.ini
+                        echo "${vmIp} ansible_user=ubuntu ansible_ssh_private_key_file=${SSH_KEY_PATH}" >> ansible/inventory.ini
+                    """
+                    
+                    // 运行 Playbook
+                    sh 'ansible-playbook -i ansible/inventory.ini ansible/playbook.yml'
+                }
             }
         }
     }

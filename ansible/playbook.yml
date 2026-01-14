@@ -1,0 +1,47 @@
+---
+- name: Deploy Weather Bot to OpenStack
+  hosts: all
+  become: yes
+  tasks:
+    - name: Install Docker dependencies
+      apt:
+        name: [apt-transport-https, ca-certificates, curl, software-properties-common, python3-pip]
+        state: present
+        update_cache: yes
+
+    - name: Install Docker
+      shell: curl -fsSL https://get.docker.com | sh
+      args:
+        creates: /usr/bin/docker
+
+    - name: Install Docker Compose
+      apt:
+        name: docker-compose
+        state: present
+
+    - name: Create app directory
+      file:
+        path: /opt/tianlang-app
+        state: directory
+        mode: '0755'
+
+    - name: Copy project files
+      copy:
+        src: "{{ item }}"
+        dest: /opt/tianlang-app/
+      with_items:
+        - ../app.py
+        - ../Dockerfile
+        - ../requirements.txt
+        - ../weather.csv
+        - ../docker-compose.yml
+    
+    - name: Copy templates directory
+      copy:
+        src: ../templates
+        dest: /opt/tianlang-app/
+
+    - name: Start Application (Docker Compose)
+      shell: docker-compose up -d --build
+      args:
+        chdir: /opt/tianlang-app
