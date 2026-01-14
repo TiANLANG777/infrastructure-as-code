@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: tianlang-app
-        image: 192.168.199.142:5000/tianlang-app:latest
+        image: 192.168.199.142:5000/tianlang-app:52
         imagePullPolicy: Always
         ports:
         - containerPort: 80
