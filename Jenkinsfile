@@ -30,6 +30,7 @@ pipeline {
                         sh 'terraform apply -var=yc_key_path=$MY_KEY -auto-approve'
                     }
                 }
+                sh 'kubectl apply -f postgres-deployment.yaml'
                 sh 'kubectl apply -f deployment.yaml'
                 sh 'kubectl rollout restart deployment/tianlang-app'
             }

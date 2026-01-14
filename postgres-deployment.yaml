@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: db  # 这里的名字很重要，Bot 会通过这个名字找到它
+spec:
+  ports:
+  - port: 5432
+    targetPort: 5432
+  selector:
+    app: postgres
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+spec:
+  selector:
+    matchLabels:
+      app: postgres
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:13  # 和你 OpenStack 用的一样
+        ports:
+        - containerPort: 5432
+        env:
+        # 使用和你 docker-compose.yml 完全一样的密码
+        - name: POSTGRES_USER
+          value: "tianlang"
+        - name: POSTGRES_PASSWORD
+          value: "securepass"
+        - name: POSTGRES_DB
+          value: "weatherdb"

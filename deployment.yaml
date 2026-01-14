@@ -23,6 +23,8 @@ spec:
         env:
           - name: ENV_TYPE
             value: "Production"
+          - name: DATABASE_URL
+            value: "postgresql://tianlang:securepass@db:5432/weatherdb"
           - name: K8S_POD_NAME
             valueFrom:
               fieldRef:
