@@ -11,6 +11,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # 2. 复制应用代码和模板
 COPY app.py .
 COPY templates ./templates
+COPY weather.csv .
 
 # 暴露应用端口 (FastAPI 默认 8000)
 EXPOSE 8000
