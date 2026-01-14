@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  # 1. 你的应用 (Bot + Web + Model)
+  tianlang-app:
+    build: .  # 使用当前目录构建镜像
+    image: tianlang-bot:latest
+    restart: always
+    ports:
+      - "80:8000"  # 开放网页端口
+    environment:
+      - TELEGRAM_TOKEN=你的_TELEGRAM_TOKEN_填这里
+      - DATABASE_URL=postgresql://tianlang:securepass@db:5432/weatherdb
+    depends_on:
+      - db
+
+  # 2. 数据库 (老师要求的 Base)
+  db:
+    image: postgres:13
+    restart: always
+    environment:
+      POSTGRES_USER: tianlang
+      POSTGRES_PASSWORD: securepass
+      POSTGRES_DB: weatherdb
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
