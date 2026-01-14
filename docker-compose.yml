@@ -1,4 +1,4 @@
-version: '3.8'
+version: '3.3'
 
 services:
   # 1. 你的应用服务 (Bot + Web + Model)
